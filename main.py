@@ -26,11 +26,15 @@ class LoginPage:
         self.password_entry = tk.Entry(self.root, show="*", textvariable=self.password, font=("Arial", 14))
         self.password_entry.pack()
 
-        self.login_button = tk.Button(self.root, text="Login", font=("Arial", 14), command=self.check_login)
+        self.login_button = tk.Button(self.root, text="Login", font=("Arial", 14), command=self.check_login,bg="light blue")
         self.login_button.pack(pady=20)
 
-        self.addemp_button = tk.Button(self.root, text="Add new employee", font=("Arial", 14))
+        self.addemp_button = tk.Button(self.root, text="Add new employee", font=("Arial", 14),bg="light blue",command=self.openaccount)
         self.addemp_button.pack(pady=10)
+
+
+
+
 
     def check_login(self):
         with sqlite3.connect("C:\\Users\\HK\\Desktop\\GUIbank.db") as connection:
@@ -46,7 +50,41 @@ class LoginPage:
             else:
                 tk.messagebox.showerror("Login Error", "Invalid username or password")
 
-    def open_main_app(self):  #open main window after log in
+    def openaccount(self):
+        new_window = tk.Toplevel(self.root)
+        new_window.title("Add New Employee")
+        new_window.geometry("400x300")
+
+        usernamelabel = tk.Label(new_window, text="Username:", font=("Arial", 15, "bold"))
+        usernamelabel.grid(row=0, column=0, padx=20, pady=30)
+
+        self.usernameentry = tk.Entry(new_window, width=15, font=("Arial", 15))
+        self.usernameentry.grid(row=0, column=1, padx=5, pady=30)
+
+        passwordlabel = tk.Label(new_window, text="Password:", font=("Arial", 15, "bold"))
+        passwordlabel.grid(row=1, column=0, padx=20, pady=30)
+
+        self.passwordentry = tk.Entry(new_window, width=15, font=("Arial", 15), show='*')
+        self.passwordentry.grid(row=1, column=1, padx=5, pady=30)
+
+        add_button = tk.Button(new_window, text="Add Employee", font=("Arial", 14), command=self.add_employee)
+        add_button.grid(row=2, column=1, pady=20)
+
+    def add_employee(self):
+        username = self.usernameentry.get()
+        password = self.passwordentry.get()
+
+        if username and password:
+            with sqlite3.connect("C:\\Users\\HK\\Desktop\\GUIbank.db") as connection:
+                cursor = connection.cursor()
+                cursor.execute("INSERT INTO employee (emp_username, emp_password) VALUES (?, ?)", (username, password))
+                connection.commit()
+                tk.messagebox.showinfo("Success", "Employee added successfully!")
+        else:
+            tk.messagebox.showerror("Error", "Please fill in all fields.")
+
+    def open_main_app(self):
+        #open main window after log in
         # self.root.withdraw()
         new_root = tk.Toplevel()
         app = User(new_root)
