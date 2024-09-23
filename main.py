@@ -26,15 +26,13 @@ class LoginPage:
         self.password_entry = tk.Entry(self.root, show="*", textvariable=self.password, font=("Arial", 14))
         self.password_entry.pack()
 
-        self.login_button = tk.Button(self.root, text="Login", font=("Arial", 14), command=self.check_login,bg="light blue")
+        self.login_button = tk.Button(self.root, text="Login", font=("Arial", 14), command=self.check_login,
+                                      bg="light blue")
         self.login_button.pack(pady=20)
 
-        self.addemp_button = tk.Button(self.root, text="Add new employee", font=("Arial", 14),bg="light blue",command=self.openaccount)
+        self.addemp_button = tk.Button(self.root, text="Add new employee", font=("Arial", 14), bg="light blue",
+                                       command=self.openaccount)
         self.addemp_button.pack(pady=10)
-
-
-
-
 
     def check_login(self):
         with sqlite3.connect("C:\\Users\\HK\\Desktop\\GUIbank.db") as connection:
@@ -245,6 +243,24 @@ class User():
 
         self.table.pack(fill="both", expand=1)
 
+        #---bank button frame---
+
+        self.frame_buttons = tk.Frame(self.root, bg="green", bd=5, relief="raised")
+        self.frame_buttons.place(x=1290, y=80, width=180, height=550)
+
+        self.secondLabel = tk.Label(self.frame_buttons, bd=5, relief="groove", text="Operations",
+                                    font=("Arial", 14, "bold"), bg="white",
+                                    fg="green")
+        self.secondLabel.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
+
+        self.depositbutton = tk.Button(self.frame_buttons, width=10, text="Deposit", font=("Arial", 14, "bold"),
+                                       command=self.deposit)
+        self.depositbutton.grid(row=3, column=0, padx=20, pady=20)
+
+        self.withdrawbutton = tk.Button(self.frame_buttons, width=10, text="Withdraw", font=("Arial", 14, "bold"),
+                                        command=self.withdraw)
+        self.withdrawbutton.grid(row=4, column=0, padx=20, pady=20)
+
     def add(self):
         with sqlite3.connect("C:\\Users\\HK\\Desktop\\GUIbank.db") as connection:
             cursor = connection.cursor()
@@ -340,6 +356,111 @@ class User():
                 tk.messagebox.showerror("Error", "NO Data Found!")
 
             connection.close()
+
+    def deposit(self):
+        self.depositframe = tk.Frame(self.root, bg="light gray", bd=5, relief="ridge")
+        self.depositframe.pack(padx=20, pady=20)
+
+        accountnumberLabel = tk.Label(self.depositframe, text="Account number", bg="light gray",
+                                      font=("Arial", 14, "bold"))
+        accountnumberLabel.pack(padx=20, pady=10)
+
+        self.accountnumber_entry = tk.Entry(self.depositframe, width=15, font=("Arial", 15))
+        self.accountnumber_entry.pack(padx=20, pady=10)
+
+        amountLabel = tk.Label(self.depositframe, text="amount :", bg="light gray", font=("Arial", 14, "bold"))
+        amountLabel.pack(padx=20, pady=10)
+
+        self.amount_entry = tk.Entry(self.depositframe, width=15, font=("Arial", 15))
+        self.amount_entry.pack(padx=20, pady=10)
+
+        sumbit_button = tk.Button(self.depositframe, bg="light blue", text="Submit", command=self.submit_deposit)
+        sumbit_button.pack(pady=10)
+
+        #close button to close the frame
+        close_button = tk.Button(self.depositframe, text="Close", command=self.depositframe.destroy)
+        close_button.pack(pady=10)
+
+    def withdraw(self):
+        self.withdrawframe = tk.Frame(self.root, bg="light gray", bd=5, relief="ridge")
+        self.withdrawframe.pack(padx=20, pady=20)
+
+        accountnumberLabel = tk.Label(self.withdrawframe, text="Account number", bg="light gray",
+                                      font=("Arial", 14, "bold"))
+        accountnumberLabel.pack(padx=20, pady=10)
+
+        self.accountnumber_entry = tk.Entry(self.withdrawframe, width=15, font=("Arial", 15))
+        self.accountnumber_entry.pack(padx=20, pady=10)
+
+        amountLabel = tk.Label(self.withdrawframe, text="amount :", bg="light gray", font=("Arial", 14, "bold"))
+        amountLabel.pack(padx=20, pady=10)
+
+        self.amount_entry = tk.Entry(self.withdrawframe, width=15, font=("Arial", 15))
+        self.amount_entry.pack(padx=20, pady=10)
+
+        passwordLabel = tk.Label(self.withdrawframe, text="Password:", bg="light gray",
+                                 font=("Arial", 14, "bold"))
+        passwordLabel.pack(padx=20, pady=10)
+
+        self.password_entry = tk.Entry(self.withdrawframe, width=15, font=("Arial", 15))
+        self.password_entry.pack(padx=20, pady=10)
+
+        sumbit_button = tk.Button(self.withdrawframe, bg="light blue", text="Submit", command=self.submit_withdraw)
+        sumbit_button.pack(pady=10)
+
+        # close button to close the frame
+        close_button = tk.Button(self.withdrawframe, text="Close", command=self.withdrawframe.destroy)
+        close_button.pack(pady=10)
+
+    def submit_deposit(self):
+        accountnumber = self.accountnumber_entry.get()
+        amount = int(self.amount_entry.get())
+
+        with sqlite3.connect("C:\\Users\\HK\\Desktop\\GUIbank.db") as connection:
+            cursor = connection.cursor()
+
+            cursor.execute("SELECT balance FROM user WHERE account_number=?", (accountnumber,))
+            data = cursor.fetchone()
+
+            if data:
+                balance = data[0]
+                if data[0] is None:
+                    balance = 0
+                update = balance + amount
+
+                cursor.execute("UPDATE user SET balance=? WHERE account_number=?", (update, accountnumber))
+                connection.commit()
+
+                tk.messagebox.showinfo("Success", "Operation was successful!")
+            else:
+                tk.messagebox.showerror("Error", "Invalid account number!")
+
+    def submit_withdraw(self):
+        accountnumber = self.accountnumber_entry.get()
+        amount = int(self.amount_entry.get())
+        password =int(self.password_entry.get())
+
+        with sqlite3.connect("C:\\Users\\HK\\Desktop\\GUIbank.db") as connection:
+            cursor = connection.cursor()
+
+            cursor.execute("SELECT password,balance FROM user WHERE account_number=?", (accountnumber,))
+            data = cursor.fetchone()
+            if data:
+                if data[0] == password:
+                    if data[1] >= amount:
+                        update = data[1] - amount
+                        cursor.execute("update user set balance=? where account_number=?", (update, accountnumber))
+                        connection.commit()
+                        connection.close()
+                        tk.messagebox.showinfo("Success", "operation was successful!")
+                    else:
+                        tk.messagebox.showerror("Error", "Insufficient Balance!")
+
+                else:
+                    tk.messagebox.showerror("Error", "Invalid password!")
+
+            else:
+                tk.messagebox.showerror("Error", "Invalid account number!")
 
 
 if __name__ == "__main__":
